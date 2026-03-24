@@ -1,0 +1,29 @@
+# Java
+backend/target/
+*.class
+*.jar
+
+# Python
+scheduler/__pycache__/
+scheduler/.venv/
+*.pyc
+*.env
+
+# Node
+frontend/node_modules/
+frontend/.env
+frontend/dist/
+frontend/build/
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
