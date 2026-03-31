@@ -28,7 +28,7 @@ export const jobService = {
   getByMachine: (machineId) => api.get(`/jobs/machine/${machineId}`)
 };
 
-export const SchedulerService = {
+export const schedulerService = {
   generateSchedule: (jobs, algorithm = 'EDD') =>
     schedulerApi.post('/schedule', { jobs, algorithm }),
   getAlgorithms: () => schedulerApi.get('/schedule/algorithms')

@@ -1,7 +1,7 @@
 //
 
 import React, { useEffect, useState } from 'react';
-import { jobService, machineService } from '../services/api';
+import { jobService, machineService, schedulerService } from '../services/api';
 
 const STATUS_STYLES = {
   IN_PROGRESS: { background: '#DBEAFE', color: '#1E40AF', label: 'In Progress' },
@@ -147,6 +147,200 @@ const machineJobs = uniqueMachines.map(machine => ({
     </div>
   );
 }
+function JobModal({ machines, onClose, onSave }) {
+  const [form, setForm] = useState({
+    name: '',
+    priority: 1,
+    estimatedHours: 1,
+    deadline: '',
+    machineId: '',
+    status: 'QUEUED'
+  });
+
+  const handleSubmit = () => {
+    if (!form.name || !form.deadline) return;
+    const machine = machines.find(m => m.id === parseInt(form.machineId));
+    onSave({
+      name: form.name,
+      priority: parseInt(form.priority),
+      estimatedHours: parseFloat(form.estimatedHours),
+      deadline: new Date(form.deadline).toISOString(),
+      machine: machine || null,
+      status: form.status
+    });
+  };
+
+  const inputStyle = {
+    width: '100%',
+    padding: '9px 12px',
+    fontSize: '13px',
+    border: '1px solid #E2E8F0',
+    borderRadius: '8px',
+    color: '#1E293B',
+    background: '#fff',
+    boxSizing: 'border-box'
+  };
+
+  const labelStyle = {
+    fontSize: '12px',
+    fontWeight: '500',
+    color: '#64748B',
+    display: 'block',
+    marginBottom: '5px'
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: 'rgba(0,0,0,0.4)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex: 1000
+    }}>
+      <div style={{
+        background: '#fff', borderRadius: '16px',
+        padding: '28px', width: '480px',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <div>
+            <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#1E293B', margin: 0 }}>New Work Order</h2>
+            <p style={{ fontSize: '12px', color: '#94A3B8', margin: '4px 0 0' }}>Add a new job to the schedule</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '20px', color: '#94A3B8', cursor: 'pointer' }}>×</button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={labelStyle}>Job Name *</label>
+            <input
+              style={inputStyle}
+              placeholder="e.g. Bracket Assembly"
+              value={form.name}
+              onChange={e => setForm({ ...form, name: e.target.value })}
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={labelStyle}>Priority</label>
+              <select style={inputStyle} value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })}>
+                <option value={1}>High (1)</option>
+                <option value={2}>Medium (2)</option>
+                <option value={3}>Low (3)</option>
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Estimated Hours</label>
+              <input
+                style={inputStyle}
+                type="number"
+                min="0.5"
+                step="0.5"
+                value={form.estimatedHours}
+                onChange={e => setForm({ ...form, estimatedHours: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Deadline *</label>
+            <input
+              style={inputStyle}
+              type="datetime-local"
+              value={form.deadline}
+              onChange={e => setForm({ ...form, deadline: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Assign Machine</label>
+            <select style={inputStyle} value={form.machineId} onChange={e => setForm({ ...form, machineId: e.target.value })}>
+              <option value="">Unassigned</option>
+              {machines.map(m => (
+                <option key={m.id} value={m.id}>{m.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Initial Status</label>
+            <select style={inputStyle} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+              <option value="QUEUED">Queued</option>
+              <option value="IN_PROGRESS">In Progress</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px', marginTop: '24px', justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{
+            padding: '9px 20px', fontSize: '13px', borderRadius: '8px',
+            border: '1px solid #E2E8F0', background: '#fff', color: '#64748B', cursor: 'pointer'
+          }}>
+            Cancel
+          </button>
+          <button onClick={handleSubmit} style={{
+            padding: '9px 20px', fontSize: '13px', borderRadius: '8px',
+            border: 'none', background: '#1F4E79', color: '#fff', cursor: 'pointer', fontWeight: '500'
+          }}>
+            Create Job
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatusDropdown({ job, onUpdate }) {
+  const [open, setOpen] = useState(false);
+  const statuses = ['QUEUED', 'IN_PROGRESS', 'COMPLETE', 'DELAYED'];
+
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <span
+        onClick={() => setOpen(!open)}
+        style={{
+          ...STATUS_STYLES[job.status],
+          padding: '4px 10px',
+          borderRadius: '100px',
+          fontSize: '11px',
+          fontWeight: '600',
+          cursor: 'pointer',
+          userSelect: 'none',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '4px'
+        }}
+      >
+        {STATUS_STYLES[job.status]?.label || job.status}
+        <span style={{ fontSize: '9px' }}>▼</span>
+      </span>
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', right: 0, marginTop: '4px',
+          background: '#fff', border: '1px solid #E2E8F0', borderRadius: '8px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '130px', overflow: 'hidden'
+        }}>
+          {statuses.map(s => (
+            <div
+              key={s}
+              onClick={() => { onUpdate(job.id, s); setOpen(false); }}
+              style={{
+                padding: '8px 12px', fontSize: '12px', cursor: 'pointer',
+                color: STATUS_STYLES[s]?.color || '#1E293B',
+                background: job.status === s ? '#F8FAFC' : '#fff',
+                fontWeight: job.status === s ? '600' : '400'
+              }}
+              onMouseEnter={e => e.target.style.background = '#F8FAFC'}
+              onMouseLeave={e => e.target.style.background = job.status === s ? '#F8FAFC' : '#fff'}
+            >
+              {STATUS_STYLES[s]?.label || s}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function PlannerDashboard() {
   const [jobs, setJobs] = useState([]);
@@ -154,16 +348,67 @@ export default function PlannerDashboard() {
   const [loading, setLoading] = useState(true);
   const [algorithm, setAlgorithm] = useState('EDD');
   const [filter, setFilter] = useState('ALL');
+  const [showModal, setShowModal] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
+  const [scheduleResult, setScheduleResult] = useState(null);
+  const [toast, setToast] = useState(null);
 
-  useEffect(() => {
-    Promise.all([jobService.getAll(), machineService.getAll()])
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const loadData = () => {
+    return Promise.all([jobService.getAll(), machineService.getAll()])
       .then(([jobsRes, machinesRes]) => {
         setJobs(jobsRes.data);
         setMachines(machinesRes.data);
       })
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { loadData(); }, []);
+
+  const handleCreateJob = (jobData) => {
+    jobService.create(jobData)
+      .then(() => {
+        loadData();
+        setShowModal(false);
+        showToast('Job created successfully');
+      })
+      .catch(() => showToast('Failed to create job', 'error'));
+  };
+
+  const handleUpdateStatus = (jobId, newStatus) => {
+    const job = jobs.find(j => j.id === jobId);
+    if (!job) return;
+    jobService.update(jobId, { ...job, status: newStatus })
+      .then(() => {
+        setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: newStatus } : j));
+        showToast(`Status updated to ${STATUS_STYLES[newStatus]?.label}`);
+      })
+      .catch(() => showToast('Failed to update status', 'error'));
+  };
+
+  const handleRunSchedule = () => {
+    setScheduling(true);
+    const jobPayload = jobs.map(j => ({
+      id: j.id,
+      name: j.name,
+      priority: j.priority,
+      deadline: j.deadline,
+      estimated_hours: j.estimatedHours,
+      machine_id: j.machine?.id || null
+    }));
+    schedulerService.generateSchedule(jobPayload, algorithm)
+      .then(res => {
+        setScheduleResult(res.data);
+        showToast(`Schedule generated — ${res.data.at_risk_count} at risk, ${res.data.overdue_count} overdue`);
+      })
+      .catch(() => showToast('Scheduling engine not reachable', 'error'))
+      .finally(() => setScheduling(false));
+  };
 
   const filteredJobs = filter === 'ALL' ? jobs : jobs.filter(j => j.status === filter);
   const onTime = jobs.filter(j => j.status !== 'DELAYED').length;
@@ -171,15 +416,33 @@ export default function PlannerDashboard() {
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '300px' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ width: '32px', height: '32px', border: '3px solid #E2E8F0', borderTop: '3px solid #3B82F6', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
-        <p style={{ color: '#94A3B8', fontSize: '14px' }}>Loading dashboard...</p>
-      </div>
+      <p style={{ color: '#94A3B8' }}>Loading dashboard...</p>
     </div>
   );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+      {toast && (
+        <div style={{
+          position: 'fixed', top: '20px', right: '20px', zIndex: 999,
+          background: toast.type === 'error' ? '#FEE2E2' : '#D1FAE5',
+          border: `1px solid ${toast.type === 'error' ? '#FCA5A5' : '#6EE7B7'}`,
+          color: toast.type === 'error' ? '#991B1B' : '#065F46',
+          padding: '12px 20px', borderRadius: '10px', fontSize: '13px',
+          fontWeight: '500', boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+        }}>
+          {toast.type === 'error' ? '✕ ' : '✓ '}{toast.message}
+        </div>
+      )}
+
+      {showModal && (
+        <JobModal
+          machines={machines}
+          onClose={() => setShowModal(false)}
+          onSave={handleCreateJob}
+        />
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div>
@@ -192,12 +455,20 @@ export default function PlannerDashboard() {
           <select
             value={algorithm}
             onChange={e => setAlgorithm(e.target.value)}
-            style={{ fontSize: '13px', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '8px 12px', background: '#fff', color: '#1E293B', cursor: 'pointer' }}>
+            style={{ fontSize: '13px', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '8px 12px', background: '#fff', color: '#1E293B' }}>
             <option value="EDD">Earliest Due Date (EDD)</option>
             <option value="SPT">Shortest Processing Time (SPT)</option>
           </select>
-          <button style={{ background: '#1F4E79', color: '#fff', fontSize: '13px', padding: '8px 18px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '500' }}>
-            Run schedule
+          <button
+            onClick={handleRunSchedule}
+            disabled={scheduling}
+            style={{ background: scheduling ? '#94A3B8' : '#1F4E79', color: '#fff', fontSize: '13px', padding: '8px 18px', borderRadius: '8px', border: 'none', cursor: scheduling ? 'not-allowed' : 'pointer', fontWeight: '500' }}>
+            {scheduling ? 'Running...' : 'Run schedule'}
+          </button>
+          <button
+            onClick={() => setShowModal(true)}
+            style={{ background: '#059669', color: '#fff', fontSize: '13px', padding: '8px 18px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '500' }}>
+            + New job
           </button>
           <button style={{ background: '#fff', fontSize: '13px', padding: '8px 18px', borderRadius: '8px', border: '1.5px solid #1F4E79', cursor: 'pointer', color: '#1F4E79', fontWeight: '500' }}>
             Publish to floor
@@ -212,6 +483,24 @@ export default function PlannerDashboard() {
         <KpiCard label="OTIF Rate" value={`${otif}%`} sub="On-time in full" color={otif >= 80 ? '#059669' : '#D97706'} />
       </div>
 
+      {scheduleResult && (
+        <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '12px', padding: '16px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <p style={{ fontSize: '14px', fontWeight: '600', color: '#1E40AF', margin: '0 0 4px' }}>
+                Schedule generated using {scheduleResult.algorithm}
+              </p>
+              <p style={{ fontSize: '12px', color: '#3B82F6', margin: 0 }}>
+                {scheduleResult.total_jobs} jobs scheduled —
+                <span style={{ color: '#D97706' }}> {scheduleResult.at_risk_count} at risk </span>—
+                <span style={{ color: '#DC2626' }}> {scheduleResult.overdue_count} overdue</span>
+              </p>
+            </div>
+            <button onClick={() => setScheduleResult(null)} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: '18px' }}>×</button>
+          </div>
+        </div>
+      )}
+
       <GanttChart jobs={jobs} machines={machines} />
 
       <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
@@ -223,12 +512,8 @@ export default function PlannerDashboard() {
           <div style={{ display: 'flex', gap: '6px' }}>
             {['ALL', 'QUEUED', 'IN_PROGRESS', 'DELAYED', 'COMPLETE'].map(s => (
               <button key={s} onClick={() => setFilter(s)} style={{
-                padding: '5px 12px',
-                fontSize: '11px',
-                borderRadius: '100px',
-                border: '1px solid',
-                cursor: 'pointer',
-                fontWeight: '500',
+                padding: '5px 12px', fontSize: '11px', borderRadius: '100px',
+                border: '1px solid', cursor: 'pointer', fontWeight: '500',
                 borderColor: filter === s ? '#1F4E79' : '#E2E8F0',
                 background: filter === s ? '#1F4E79' : '#fff',
                 color: filter === s ? '#fff' : '#64748B'
@@ -251,7 +536,6 @@ export default function PlannerDashboard() {
           </thead>
           <tbody>
             {filteredJobs.map((job, i) => {
-              const style = STATUS_STYLES[job.status] || STATUS_STYLES.QUEUED;
               const isOverdue = job.status === 'DELAYED';
               return (
                 <tr key={job.id} style={{ borderTop: '1px solid #F8FAFC', background: i % 2 === 0 ? '#fff' : '#FAFAFA' }}>
@@ -277,9 +561,7 @@ export default function PlannerDashboard() {
                     {job.deadline ? new Date(job.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
                   </td>
                   <td style={{ padding: '12px 16px' }}>
-                    <span style={{ ...style, padding: '4px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: '600' }}>
-                      {style.label}
-                    </span>
+                    <StatusDropdown job={job} onUpdate={handleUpdateStatus} />
                   </td>
                 </tr>
               );
