@@ -1,33 +1,39 @@
 
 
 import React from 'react';
-import { NavLink } from 'react-router-dom'; 
+import { NavLink } from 'react-router-dom';
 
 const menuItems = [
-  {path: '/', label:'Gantt Schedule', icon: 'fa-solid fa-chart-gantt'},
-  {path:'/jobs', label:'Work Orders', icon: 'fa-solid fa-briefcase'},
-  {path:'/machines', label:'Machines', icon: 'fa-solid fa-cogs'},
-  {path:'/kpi', label:'KPIs', icon: 'fa-solid fa-chart-line'},
-  {path:'/floor', label:'Factory Floor', icon: 'fa-solid fa-industry'},
-  {path:'/operators', label:'Operators', icon: 'fa-solid fa-users'},
+  { path: '/', label: 'Gantt Schedule', icon: '▦' },
+  { path: '/jobs', label: 'Work Orders', icon: '☰' },
+  { path: '/machines', label: 'Machines', icon: '⚙' },
+  { path: '/kpi', label: 'KPIs', icon: '▲' },
+  { path: '/floor', label: 'Factory Floor', icon: '◉' },
+  { path: '/operator', label: 'Operators', icon: '▶' },
 ];
 
 export default function Sidebar() {
   return (
-    <div className="w-56 min-h-screen bg-gray-900 flex flex-col">
+    <div style={{ width: '220px', minHeight: '100%', background: '#3e3027', display: 'flex', flexDirection: 'column', paddingTop: '8px' }}>
       {menuItems.map((item) => (
         <NavLink
           key={item.path}
           to={item.path}
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-3 text-sm transition-colors
-            ${isActive
-              ? 'bg-white/10 text-white border-l-4 border-blue-400'
-              : 'text-gray-400 hover:text-white hover:bg-white/5'
-            }`
-          }
+          end={item.path === '/'}
+          style={({ isActive }) => ({
+            padding: '11px 16px',
+            fontSize: '13px',
+            color: isActive ? '#ffffff' : '#64748B',
+            background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+            borderLeft: isActive ? '3px solid #3B82F6' : '3px solid transparent',
+            textDecoration: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            transition: 'all 0.15s'
+          })}
         >
-          <span className="text-base">{item.icon}</span>
+          <span style={{ fontSize: '14px', width: '18px', textAlign: 'center' }}>{item.icon}</span>
           {item.label}
         </NavLink>
       ))}
