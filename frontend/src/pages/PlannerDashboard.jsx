@@ -55,10 +55,13 @@ function GanttChart({ jobs, machines }) {
     return { width, left, ...(fills[status] || fills.QUEUED) };
   };
 
-  const machineJobs = machines.map(machine => ({
+  const uniqueMachines = machines.filter(
+    (m, index, self) => index === self.findIndex(t => t.id === m.id)
+);
+const machineJobs = uniqueMachines.map(machine => ({
     machine,
     jobs: jobs.filter(j => j.machine?.id === machine.id)
-  }));
+}));
 
   return (
     <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
