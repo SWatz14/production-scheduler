@@ -32,7 +32,7 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         // Seed machines
-        if (machineRepository.count() > 0) return; // Only seed if no machines exist
+        if (machineRepository.count() > 7) return; // Only seed if no machines exist
         
         Machine m1= machineRepository.save(new Machine(null, "Machine 1", "Type A",
             Machine.MachineStatus.RUNNING,8.0, LocalTime.of(7,0), LocalTime.of(19,0)
