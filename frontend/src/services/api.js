@@ -1,12 +1,12 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: 'https://production-scheduler-production-e637.up.railway.app/api',
   headers: { 'Content-Type': 'application/json' }
 });
 
 const schedulerApi = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: 'https://scheduler-service-production-d830.up.railway.app/api',
   headers: { 'Content-Type': 'application/json' }
 });
 
