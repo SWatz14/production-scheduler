@@ -6,7 +6,7 @@ import { jobService, machineService, schedulerService } from '../services/api';
 const STATUS_STYLES = {
   IN_PROGRESS: { background: '#DBEAFE', color: '#1E40AF', label: 'In Progress' },
   DELAYED:     { background: '#FEE2E2', color: '#991B1B', label: 'Overdue' },
-  COMPLETE:    { background: '#D1FAE5', color: '#065F46', label: 'Complete' },
+  COMPLETED:   { background: '#D1FAE5', color: '#065F46', label: 'Completed' },
   QUEUED:      { background: '#FEF9C3', color: '#854D0E', label: 'Queued' },
 };
 
@@ -71,7 +71,7 @@ const machineJobs = uniqueMachines.map(machine => ({
           <p style={{ fontSize: '12px', color: '#94A3B8', margin: '2px 0 0' }}>Shift 07:00 — 15:00</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          {['IN_PROGRESS', 'QUEUED', 'DELAYED', 'COMPLETE'].map(s => (
+          {['IN_PROGRESS', 'QUEUED', 'DELAYED', 'COMPLETED'].map(s => (
             <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: STATUS_STYLES[s].background, border: `1px solid ${STATUS_STYLES[s].color}` }} />
               <span style={{ fontSize: '11px', color: '#64748B' }}>{STATUS_STYLES[s].label}</span>
@@ -292,12 +292,24 @@ function JobModal({ machines, onClose, onSave }) {
 
 function StatusDropdown({ job, onUpdate }) {
   const [open, setOpen] = useState(false);
-  const statuses = ['QUEUED', 'IN_PROGRESS', 'COMPLETE', 'DELAYED'];
+  const [dropUp, setDropUp] = useState(false);
+  const btnRef = React.useRef(null);
+  const statuses = ['QUEUED', 'IN_PROGRESS', 'COMPLETED', 'DELAYED'];
+
+  const handleToggle = () => {
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setDropUp(spaceBelow < 160);
+    }
+    setOpen(!open);
+  };
 
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
       <span
-        onClick={() => setOpen(!open)}
+        ref={btnRef}
+        onClick={handleToggle}
         style={{
           ...STATUS_STYLES[job.status],
           padding: '4px 10px',
@@ -316,9 +328,11 @@ function StatusDropdown({ job, onUpdate }) {
       </span>
       {open && (
         <div style={{
-          position: 'absolute', top: '100%', right: 0, marginTop: '4px',
+          position: 'absolute',
+          ...(dropUp ? { bottom: '100%', marginBottom: '4px' } : { top: '100%', marginTop: '4px' }),
+          right: 0,
           background: '#fff', border: '1px solid #E2E8F0', borderRadius: '8px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '130px', overflow: 'hidden'
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)', zIndex: 9999, minWidth: '130px', overflow: 'hidden'
         }}>
           {statuses.map(s => (
             <div
@@ -330,8 +344,8 @@ function StatusDropdown({ job, onUpdate }) {
                 background: job.status === s ? '#F8FAFC' : '#fff',
                 fontWeight: job.status === s ? '600' : '400'
               }}
-              onMouseEnter={e => e.target.style.background = '#F8FAFC'}
-              onMouseLeave={e => e.target.style.background = job.status === s ? '#F8FAFC' : '#fff'}
+              onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
+              onMouseLeave={e => e.currentTarget.style.background = job.status === s ? '#F8FAFC' : '#fff'}
             >
               {STATUS_STYLES[s]?.label || s}
             </div>
@@ -341,7 +355,6 @@ function StatusDropdown({ job, onUpdate }) {
     </div>
   );
 }
-
 export default function PlannerDashboard() {
   const [jobs, setJobs] = useState([]);
   const [machines, setMachines] = useState([]);
@@ -381,15 +394,15 @@ export default function PlannerDashboard() {
   };
 
   const handleUpdateStatus = (jobId, newStatus) => {
-    const job = jobs.find(j => j.id === jobId);
-    if (!job) return;
-    jobService.update(jobId, { ...job, status: newStatus })
-      .then(() => {
-        setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: newStatus } : j));
-        showToast(`Status updated to ${STATUS_STYLES[newStatus]?.label}`);
-      })
-      .catch(() => showToast('Failed to update status', 'error'));
-  };
+  const job = jobs.find(j => j.id === jobId);
+  if (!job) return;
+  jobService.updateStatus(jobId, newStatus)   // ← changed from jobService.update
+    .then(() => {
+      setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: newStatus } : j));
+      showToast(`Status updated to ${STATUS_STYLES[newStatus]?.label}`);
+    })
+    .catch(() => showToast('Failed to update status', 'error'));
+};
 
   const handleRunSchedule = () => {
     setScheduling(true);
@@ -510,7 +523,7 @@ export default function PlannerDashboard() {
             <p style={{ fontSize: '12px', color: '#94A3B8', margin: '2px 0 0' }}>{filteredJobs.length} jobs shown</p>
           </div>
           <div style={{ display: 'flex', gap: '6px' }}>
-            {['ALL', 'QUEUED', 'IN_PROGRESS', 'DELAYED', 'COMPLETE'].map(s => (
+            {['ALL', 'QUEUED', 'IN_PROGRESS', 'DELAYED', 'COMPLETED'].map(s => (
               <button key={s} onClick={() => setFilter(s)} style={{
                 padding: '5px 12px', fontSize: '11px', borderRadius: '100px',
                 border: '1px solid', cursor: 'pointer', fontWeight: '500',

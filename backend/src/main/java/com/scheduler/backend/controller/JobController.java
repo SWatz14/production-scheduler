@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/jobs")
@@ -60,6 +61,12 @@ public class JobController {
         @PathVariable Long machineId){
             return ResponseEntity.ok(jobService.getJobsByMachineId(machineId));
         }
+    
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Job> updateStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
+    Job.JobStatus status = Job.JobStatus.valueOf(body.get("status"));
+    return ResponseEntity.ok(jobService.updateJobStatus(id, status));
+}
     
 
 }

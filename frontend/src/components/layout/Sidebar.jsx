@@ -14,7 +14,7 @@ const menuItems = [
 
 export default function Sidebar() {
   return (
-    <div style={{ width: '220px', minHeight: '100%', background: '#3e3027', display: 'flex', flexDirection: 'column', paddingTop: '8px' }}>
+    <div style={{ width: '220px', minHeight: '100%', background: '#152476', display: 'flex', flexDirection: 'column', paddingTop: '8px' }}>
       {menuItems.map((item) => (
         <NavLink
           key={item.path}

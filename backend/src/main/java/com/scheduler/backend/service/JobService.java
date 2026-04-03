@@ -46,5 +46,10 @@ public class JobService {
     public List<Job> getJobsByMachineId(Long machineId) {
         return jobRepository.findByMachineId(machineId);
     }
+    public Job updateJobStatus(Long id, Job.JobStatus status) {
+    Job existing = getJobById(id);
+    existing.setStatus(status);
+    return jobRepository.save(existing);
+}
     
 }

@@ -1,12 +1,12 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://production-scheduler-production-e637.up.railway.app/api',
+  baseURL: 'http://localhost:8080/api',
   headers: { 'Content-Type': 'application/json' }
 });
 
 const schedulerApi = axios.create({
-  baseURL: 'https://scheduler-service-production-d830.up.railway.app/api',
+  baseURL: 'http://localhost:8000/api',
   headers: { 'Content-Type': 'application/json' }
 });
 
@@ -22,7 +22,7 @@ export const jobService = {
   getAll: () => api.get('/jobs'),
   getById: (id) => api.get(`/jobs/${id}`),
   create: (data) => api.post('/jobs', data),
-  update: (id, data) => api.put(`/jobs/${id}`, data),
+  updateStatus: (id, status) => api.patch(`/jobs/${id}/status`, { status }),
   delete: (id) => api.delete(`/jobs/${id}`),
   getByStatus: (status) => api.get(`/jobs/status/${status}`),
   getByMachine: (machineId) => api.get(`/jobs/machine/${machineId}`)
@@ -33,3 +33,5 @@ export const schedulerService = {
     schedulerApi.post('/schedule', { jobs, algorithm }),
   getAlgorithms: () => schedulerApi.get('/schedule/algorithms')
 };
+
+export default api;
