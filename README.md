@@ -98,13 +98,13 @@ This project combines my manufacturing domain knowledge with full-stack engineer
 ## 📸 Screenshots
 
 ### Planner Dashboard
-![Dashboard](docs/screenshots/planner dashboard.png)
+![Dashboard](C:\Users\watem\production-scheduler\docs\screenshots\planner)
 
 ### Gantt Chart
-![Gantt](docs/screenshots/gantt schedule.png)
+![Gantt](C:\Users\watem\production-scheduler\docs\screenshots\gannt)
 
 ### Work Orders Table
-![Work Orders](docs/screenshots/work orders.png)
+![Work Orders](C:\Users\watem\production-scheduler\docs\screenshots\work)
 
 ## 📄 License
 MIT
