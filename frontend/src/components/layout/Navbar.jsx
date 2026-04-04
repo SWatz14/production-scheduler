@@ -13,7 +13,7 @@ export default function Navbar() {
           Planner view
         </span>
         <span className="bg-white/20 text-white text-xs px-3 py-1 rounded-full">
-          J. Smith
+          Operator view
         </span>
       </div>
     </div>

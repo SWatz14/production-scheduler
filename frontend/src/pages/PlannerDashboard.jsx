@@ -1,4 +1,9 @@
-//
+// This file contains the main dashboard component for the production scheduling application. 
+// It displays key performance indicators, a Gantt chart of scheduled jobs, and a table of work orders. 
+// It also includes functionality to create new jobs, update job statuses, and run the scheduling algorithm.
+//  The component uses React hooks for state management and side effects, and 
+// it interacts with the backend API through the imported services.
+
 
 import React, { useEffect, useState } from 'react';
 import { jobService, machineService, schedulerService } from '../services/api';

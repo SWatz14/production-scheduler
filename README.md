@@ -98,13 +98,13 @@ This project combines my manufacturing domain knowledge with full-stack engineer
 ## 📸 Screenshots
 
 ### Planner Dashboard
-![Dashboard](docs/screenshots/dashboard.png)
+![Dashboard](docs/screenshots/planner dashboard.png)
 
 ### Gantt Chart
-![Gantt](docs/screenshots/gantt.png)
+![Gantt](docs/screenshots/gantt schedule.png)
 
 ### Work Orders Table
-![Work Orders](docs/screenshots/workorders.png)
+![Work Orders](docs/screenshots/work orders.png)
 
 ## 📄 License
 MIT
