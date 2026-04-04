@@ -95,16 +95,7 @@ I have a background in both mechanical engineering and software development — 
 
 This project combines my manufacturing domain knowledge with full-stack engineering to build something that solves a real problem I've seen firsthand on the shop floor.
 
-## 📸 Screenshots
 
-### Planner Dashboard
-![Dashboard](C:\Users\watem\production-scheduler\docs\screenshots\planner)
-
-### Gantt Chart
-![Gantt](C:\Users\watem\production-scheduler\docs\screenshots\gannt)
-
-### Work Orders Table
-![Work Orders](C:\Users\watem\production-scheduler\docs\screenshots\work)
 
 ## 📄 License
 MIT
