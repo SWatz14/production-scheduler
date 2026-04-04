@@ -1,8 +1,4 @@
-// This file contains the main dashboard component for the production scheduling application. 
-// It displays key performance indicators, a Gantt chart of scheduled jobs, and a table of work orders. 
-// It also includes functionality to create new jobs, update job statuses, and run the scheduling algorithm.
-//  The component uses React hooks for state management and side effects, and 
-// it interacts with the backend API through the imported services.
+
 
 
 import React, { useEffect, useState } from 'react';
@@ -110,16 +106,61 @@ function GanttChart({ jobs, machines, dark }) {
 }
 
 function JobModal({ machines, onClose, onSave, dark }) {
-  const [form, setForm] = useState({ name: '', priority: 1, estimatedHours: 1, deadline: '', machineId: '', status: 'QUEUED' });
+  const [form, setForm] = useState({
+    name: '',
+    priority: 1,
+    estimatedHours: 1,
+    deadline: '',
+    machineId: '',
+    status: 'QUEUED'
+  });
+  const [errors, setErrors] = useState({});
 
   const handleSubmit = () => {
-    if (!form.name || !form.deadline) return;
+    const newErrors = {};
+    if (!form.name.trim()) newErrors.name = 'Job name is required';
+    if (!form.deadline) newErrors.deadline = 'Please select a deadline date and time';
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
     const machine = machines.find(m => m.id === parseInt(form.machineId));
-    onSave({ name: form.name, priority: parseInt(form.priority), estimatedHours: parseFloat(form.estimatedHours), deadline: new Date(form.deadline).toISOString(), machine: machine || null, status: form.status });
+    onSave({
+      name: form.name.trim(),
+      priority: parseInt(form.priority),
+      estimatedHours: parseFloat(form.estimatedHours),
+      deadline: new Date(form.deadline).toISOString(),
+      machine: machine || null,
+      status: form.status
+    });
   };
 
-  const inputStyle = { width: '100%', padding: '9px 12px', fontSize: '13px', border: `1px solid ${dark ? '#00e5ff22' : '#E2E8F0'}`, borderRadius: '8px', color: dark ? '#c8d8f0' : '#1E293B', background: dark ? '#080c18' : '#fff', boxSizing: 'border-box' };
-  const labelStyle = { fontSize: '12px', fontWeight: '500', color: dark ? '#c8d8f077' : '#64748B', display: 'block', marginBottom: '5px' };
+  const inputStyle = {
+    width: '100%',
+    padding: '9px 12px',
+    fontSize: '13px',
+    border: `1px solid ${dark ? '#00e5ff22' : '#E2E8F0'}`,
+    borderRadius: '8px',
+    color: dark ? '#c8d8f0' : '#1E293B',
+    background: dark ? '#080c18' : '#fff',
+    boxSizing: 'border-box',
+    colorScheme: dark ? 'dark' : 'light',
+    outline: 'none',
+  };
+
+  const labelStyle = {
+    fontSize: '12px',
+    fontWeight: '500',
+    color: dark ? '#c8d8f077' : '#64748B',
+    display: 'block',
+    marginBottom: '5px'
+  };
+
+  const errorStyle = {
+    fontSize: '11px',
+    color: '#DC2626',
+    margin: '4px 0 0'
+  };
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
@@ -131,11 +172,19 @@ function JobModal({ machines, onClose, onSave, dark }) {
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '20px', color: dark ? '#c8d8f055' : '#94A3B8', cursor: 'pointer' }}>×</button>
         </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
             <label style={labelStyle}>Job Name *</label>
-            <input style={inputStyle} placeholder="e.g. Bracket Assembly" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+            <input
+              style={{ ...inputStyle, borderColor: errors.name ? '#DC2626' : (dark ? '#00e5ff22' : '#E2E8F0') }}
+              placeholder="e.g. Bracket Assembly"
+              value={form.name}
+              onChange={e => { setForm({ ...form, name: e.target.value }); setErrors({ ...errors, name: '' }); }}
+            />
+            {errors.name && <p style={errorStyle}>⚠ {errors.name}</p>}
           </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
               <label style={labelStyle}>Priority</label>
@@ -147,13 +196,32 @@ function JobModal({ machines, onClose, onSave, dark }) {
             </div>
             <div>
               <label style={labelStyle}>Estimated Hours</label>
-              <input style={inputStyle} type="number" min="0.5" step="0.5" value={form.estimatedHours} onChange={e => setForm({ ...form, estimatedHours: e.target.value })} />
+              <input
+                style={inputStyle}
+                type="number"
+                min="0.5"
+                step="0.5"
+                value={form.estimatedHours}
+                onChange={e => setForm({ ...form, estimatedHours: e.target.value })}
+              />
             </div>
           </div>
+
           <div>
             <label style={labelStyle}>Deadline *</label>
-            <input style={inputStyle} type="datetime-local" value={form.deadline} onChange={e => setForm({ ...form, deadline: e.target.value })} />
+            <input
+              style={{ ...inputStyle, borderColor: errors.deadline ? '#DC2626' : (dark ? '#00e5ff22' : '#E2E8F0') }}
+              type="datetime-local"
+              value={form.deadline}
+              min={new Date().toISOString().slice(0, 16)}
+              onChange={e => { setForm({ ...form, deadline: e.target.value }); setErrors({ ...errors, deadline: '' }); }}
+            />
+            {errors.deadline && <p style={errorStyle}>⚠ {errors.deadline}</p>}
+            {!form.deadline && !errors.deadline && (
+              <p style={{ fontSize: '11px', color: dark ? '#c8d8f033' : '#94A3B8', margin: '4px 0 0' }}>Click to select a date and time</p>
+            )}
           </div>
+
           <div>
             <label style={labelStyle}>Assign Machine</label>
             <select style={inputStyle} value={form.machineId} onChange={e => setForm({ ...form, machineId: e.target.value })}>
@@ -161,6 +229,7 @@ function JobModal({ machines, onClose, onSave, dark }) {
               {machines.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
           </div>
+
           <div>
             <label style={labelStyle}>Initial Status</label>
             <select style={inputStyle} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
@@ -169,9 +238,14 @@ function JobModal({ machines, onClose, onSave, dark }) {
             </select>
           </div>
         </div>
+
         <div style={{ display: 'flex', gap: '10px', marginTop: '24px', justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ padding: '9px 20px', fontSize: '13px', borderRadius: '8px', border: `1px solid ${dark ? '#00e5ff22' : '#E2E8F0'}`, background: 'transparent', color: dark ? '#c8d8f077' : '#64748B', cursor: 'pointer' }}>Cancel</button>
-          <button onClick={handleSubmit} style={{ padding: '9px 20px', fontSize: '13px', borderRadius: '8px', border: 'none', background: '#1F4E79', color: '#fff', cursor: 'pointer', fontWeight: '500' }}>Create Job</button>
+          <button onClick={onClose} style={{ padding: '9px 20px', fontSize: '13px', borderRadius: '8px', border: `1px solid ${dark ? '#00e5ff22' : '#E2E8F0'}`, background: 'transparent', color: dark ? '#c8d8f077' : '#64748B', cursor: 'pointer' }}>
+            Cancel
+          </button>
+          <button onClick={handleSubmit} style={{ padding: '9px 20px', fontSize: '13px', borderRadius: '8px', border: 'none', background: '#1F4E79', color: '#fff', cursor: 'pointer', fontWeight: '500' }}>
+            Create Job
+          </button>
         </div>
       </div>
     </div>
@@ -236,7 +310,10 @@ export default function PlannerDashboard() {
     thBg: dark ? '#080c1a' : '#F8FAFC',
   };
 
-  const showToast = (message, type = 'success') => { setToast({ message, type }); setTimeout(() => setToast(null), 3000); };
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const loadData = () => Promise.all([jobService.getAll(), machineService.getAll()])
     .then(([j, m]) => { setJobs(j.data); setMachines(m.data); })
@@ -246,7 +323,9 @@ export default function PlannerDashboard() {
   useEffect(() => { loadData(); }, []);
 
   const handleCreateJob = (jobData) => {
-    jobService.create(jobData).then(() => { loadData(); setShowModal(false); showToast('Job created successfully'); }).catch(() => showToast('Failed to create job', 'error'));
+    jobService.create(jobData)
+      .then(() => { loadData(); setShowModal(false); showToast('Job created successfully'); })
+      .catch(() => showToast('Failed to create job', 'error'));
   };
 
   const handleUpdateStatus = (jobId, newStatus) => {
@@ -267,7 +346,11 @@ export default function PlannerDashboard() {
   const filteredJobs = filter === 'ALL' ? jobs : jobs.filter(j => j.status === filter);
   const otif = jobs.length > 0 ? Math.round((jobs.filter(j => j.status !== 'DELAYED').length / jobs.length) * 100) : 0;
 
-  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '300px' }}><p style={{ color: '#94A3B8' }}>Loading dashboard...</p></div>;
+  if (loading) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '300px' }}>
+      <p style={{ color: '#94A3B8' }}>Loading dashboard...</p>
+    </div>
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -278,12 +361,21 @@ export default function PlannerDashboard() {
         </div>
       )}
 
-      {showModal && <JobModal machines={machines} onClose={() => setShowModal(false)} onSave={handleCreateJob} dark={dark} />}
+      {showModal && (
+        <JobModal
+          machines={machines}
+          onClose={() => setShowModal(false)}
+          onSave={handleCreateJob}
+          dark={dark}
+        />
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: '700', color: t.text, margin: 0 }}>Planner Dashboard</h1>
-          <p style={{ fontSize: '13px', color: t.muted, margin: '4px 0 0' }}>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <p style={{ fontSize: '13px', color: t.muted, margin: '4px 0 0' }}>
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <select value={algorithm} onChange={e => setAlgorithm(e.target.value)} style={{ fontSize: '13px', border: `1px solid ${t.border}`, borderRadius: '8px', padding: '8px 12px', background: t.card, color: t.text }}>
@@ -293,8 +385,12 @@ export default function PlannerDashboard() {
           <button onClick={handleRunSchedule} disabled={scheduling} style={{ background: scheduling ? '#94A3B8' : '#1F4E79', color: '#fff', fontSize: '13px', padding: '8px 18px', borderRadius: '8px', border: 'none', cursor: scheduling ? 'not-allowed' : 'pointer', fontWeight: '500' }}>
             {scheduling ? 'Running...' : 'Run schedule'}
           </button>
-          <button onClick={() => setShowModal(true)} style={{ background: '#059669', color: '#fff', fontSize: '13px', padding: '8px 18px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '500' }}>+ New job</button>
-          <button style={{ background: t.card, fontSize: '13px', padding: '8px 18px', borderRadius: '8px', border: '1.5px solid #1F4E79', cursor: 'pointer', color: '#1F4E79', fontWeight: '500' }}>Publish to floor</button>
+          <button onClick={() => setShowModal(true)} style={{ background: '#059669', color: '#fff', fontSize: '13px', padding: '8px 18px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '500' }}>
+            + New job
+          </button>
+          <button style={{ background: t.card, fontSize: '13px', padding: '8px 18px', borderRadius: '8px', border: '1.5px solid #1F4E79', cursor: 'pointer', color: '#1F4E79', fontWeight: '500' }}>
+            Publish to floor
+          </button>
         </div>
       </div>
 
@@ -309,9 +405,13 @@ export default function PlannerDashboard() {
         <div style={{ background: dark ? '#0d1526' : '#EFF6FF', border: `1px solid ${dark ? '#00e5ff22' : '#BFDBFE'}`, borderRadius: '12px', padding: '16px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <p style={{ fontSize: '14px', fontWeight: '600', color: '#1E40AF', margin: '0 0 4px' }}>Schedule generated using {scheduleResult.algorithm}</p>
+              <p style={{ fontSize: '14px', fontWeight: '600', color: '#1E40AF', margin: '0 0 4px' }}>
+                Schedule generated using {scheduleResult.algorithm}
+              </p>
               <p style={{ fontSize: '12px', color: '#3B82F6', margin: 0 }}>
-                {scheduleResult.total_jobs} jobs scheduled —<span style={{ color: '#D97706' }}> {scheduleResult.at_risk_count} at risk </span>—<span style={{ color: '#DC2626' }}> {scheduleResult.overdue_count} overdue</span>
+                {scheduleResult.total_jobs} jobs scheduled —
+                <span style={{ color: '#D97706' }}> {scheduleResult.at_risk_count} at risk </span>—
+                <span style={{ color: '#DC2626' }}> {scheduleResult.overdue_count} overdue</span>
               </p>
             </div>
             <button onClick={() => setScheduleResult(null)} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: '18px' }}>×</button>
@@ -374,7 +474,9 @@ export default function PlannerDashboard() {
             })}
           </tbody>
         </table>
-        {filteredJobs.length === 0 && <div style={{ padding: '40px', textAlign: 'center', color: t.muted }}>No jobs found for this filter</div>}
+        {filteredJobs.length === 0 && (
+          <div style={{ padding: '40px', textAlign: 'center', color: t.muted }}>No jobs found for this filter</div>
+        )}
       </div>
     </div>
   );
